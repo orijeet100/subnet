@@ -28,7 +28,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, prompt, tools } = body;
+    const { title, description, prompt, tools, originalAgentId } = body;
 
     if (!title || !description || !prompt) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         description,
         prompt,
         tools: tools || [],
+        originalAgentId: originalAgentId ? parseInt(originalAgentId) : null,
       })
       .returning();
 

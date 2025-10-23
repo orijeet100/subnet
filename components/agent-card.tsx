@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Share2, GitFork } from 'lucide-react';
 import { useState } from 'react';
 import { AVAILABLE_TOOLS } from '@/lib/types';
 
@@ -23,6 +23,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, onDelete }: AgentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -51,6 +52,35 @@ export function AgentCard({ agent, onDelete }: AgentCardProps) {
     }
   };
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const shareUrl = `${window.location.origin}/share/${agent.id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+    }
+  };
+
+  const handleFork = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Store agent data in localStorage and redirect to create page
+    localStorage.setItem('forkAgent', JSON.stringify({
+      title: `${agent.title} (Fork)`,
+      description: agent.description,
+      prompt: agent.prompt,
+      tools: agent.tools,
+      originalAgentId: agent.id
+    }));
+    window.location.href = '/create';
+  };
+
   return (
     <Card className="relative">
       <CardHeader>
@@ -59,15 +89,38 @@ export function AgentCard({ agent, onDelete }: AgentCardProps) {
             <CardTitle className="text-xl">{agent.title}</CardTitle>
             <CardDescription className="line-clamp-2">{agent.description}</CardDescription>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 shrink-0"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-blue-600 hover:bg-blue-50 h-8 w-8 shrink-0"
+              onClick={handleShare}
+              title="Share agent"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-green-600 hover:bg-green-50 h-8 w-8 shrink-0"
+              onClick={handleFork}
+              title="Fork agent"
+            >
+              <GitFork className="h-4 w-4" />
+            </Button>
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 shrink-0"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                title="Delete agent"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>

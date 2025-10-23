@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,26 @@ export default function CreatePage() {
   const [description, setDescription] = useState('');
   const [prompt, setPrompt] = useState('');
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [originalAgentId, setOriginalAgentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for forked agent data in localStorage
+    const forkData = localStorage.getItem('forkAgent');
+    if (forkData) {
+      try {
+        const agent = JSON.parse(forkData);
+        setTitle(agent.title || '');
+        setDescription(agent.description || '');
+        setPrompt(agent.prompt || '');
+        setSelectedTools(agent.tools || []);
+        setOriginalAgentId(agent.originalAgentId || null);
+        // Clear the fork data after using it
+        localStorage.removeItem('forkAgent');
+      } catch (error) {
+        console.error('Error parsing fork data:', error);
+      }
+    }
+  }, []);
 
   const handleToolToggle = (tool: string) => {
     setSelectedTools((prev) =>
@@ -35,6 +55,7 @@ export default function CreatePage() {
       description,
       prompt,
       tools: selectedTools,
+      originalAgentId: originalAgentId,
     };
 
     try {
