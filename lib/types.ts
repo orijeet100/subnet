@@ -4,6 +4,7 @@ export interface Agent {
   description: string;
   prompt: string;
   tools: string[];
+  forkCount?: number;
 }
 
 export const AVAILABLE_TOOLS = [

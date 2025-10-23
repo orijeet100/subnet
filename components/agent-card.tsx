@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Share2, GitFork } from 'lucide-react';
+import { Trash2, Share2, GitFork, Users } from 'lucide-react';
 import { useState } from 'react';
 import { AVAILABLE_TOOLS } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -74,19 +74,41 @@ export function AgentCard({ agent, onDelete }: AgentCardProps) {
     }
   };
 
-  const handleFork = (e: React.MouseEvent) => {
+  const handleFork = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Store agent data in localStorage and redirect to create page
-    localStorage.setItem('forkAgent', JSON.stringify({
-      title: `${agent.title} (Fork)`,
-      description: agent.description,
-      prompt: agent.prompt,
-      tools: agent.tools,
-      originalAgentId: agent.id
-    }));
-    window.location.href = '/create';
+    try {
+      // Get fork information from API
+      const response = await fetch(`/api/agents/${agent.id}/forks`);
+      if (!response.ok) {
+        throw new Error('Failed to get fork information');
+      }
+      
+      const forkData = await response.json();
+      
+      // Store agent data in localStorage and redirect to create page
+      localStorage.setItem('forkAgent', JSON.stringify({
+        title: forkData.suggestedName,
+        description: forkData.originalAgent.description,
+        prompt: forkData.originalAgent.prompt,
+        tools: forkData.originalAgent.tools,
+        originalAgentId: agent.id
+      }));
+      
+      window.location.href = '/create';
+    } catch (error) {
+      console.error('Error getting fork information:', error);
+      // Fallback to simple fork naming
+      localStorage.setItem('forkAgent', JSON.stringify({
+        title: `${agent.title} (Fork)`,
+        description: agent.description,
+        prompt: agent.prompt,
+        tools: agent.tools,
+        originalAgentId: agent.id
+      }));
+      window.location.href = '/create';
+    }
   };
 
   return (
@@ -132,20 +154,28 @@ export function AgentCard({ agent, onDelete }: AgentCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-2">
-          <p className="text-muted-foreground text-sm font-medium">Tools:</p>
-          <div className="flex flex-wrap gap-2">
-            {agent.tools.slice(0, 2).map((tool) => (
-              <Badge key={tool} variant="secondary" className="text-xs">
-                {AVAILABLE_TOOLS.find((t) => t.value === tool)?.label}
-              </Badge>
-            ))}
-            {agent.tools.length > 2 && (
-              <Badge variant="secondary" className="text-xs">
-                +{agent.tools.length - 2}
-              </Badge>
-            )}
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <p className="text-muted-foreground text-sm font-medium">Tools:</p>
+            <div className="flex flex-wrap gap-2">
+              {agent.tools.slice(0, 2).map((tool) => (
+                <Badge key={tool} variant="secondary" className="text-xs">
+                  {AVAILABLE_TOOLS.find((t) => t.value === tool)?.label}
+                </Badge>
+              ))}
+              {agent.tools.length > 2 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{agent.tools.length - 2}
+                </Badge>
+              )}
+            </div>
           </div>
+          {agent.forkCount && agent.forkCount > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground text-sm">
+              <Users className="h-3 w-3" />
+              <span>{agent.forkCount} fork{agent.forkCount !== 1 ? 's' : ''}</span>
+            </div>
+          )}
         </div>
       </CardContent>
       <CardFooter>

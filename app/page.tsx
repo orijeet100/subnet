@@ -8,23 +8,31 @@ import { AgentCard } from '@/components/agent-card';
 export default function HomePage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function fetchAgents() {
-      try {
-        const response = await fetch('/api/agents');
-        if (!response.ok) {
-          throw new Error('Failed to fetch agents');
-        }
-        const data = await response.json();
-        setAgents(data);
-      } catch (error) {
-        console.error('Error fetching agents:', error);
-      } finally {
-        setIsLoading(false);
+  const fetchAgents = async (isRefresh = false) => {
+    if (isRefresh) {
+      setIsRefreshing(true);
+    }
+    
+    try {
+      const response = await fetch('/api/agents');
+      if (!response.ok) {
+        throw new Error('Failed to fetch agents');
+      }
+      const data = await response.json();
+      setAgents(data);
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+    } finally {
+      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
       }
     }
+  };
 
+  useEffect(() => {
     fetchAgents();
   }, []);
 
@@ -33,7 +41,12 @@ export default function HomePage() {
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-foreground mb-2 text-4xl font-bold">Discover Agents</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground mb-2 text-4xl font-bold">Discover Agents</h1>
+            {isRefreshing && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            )}
+          </div>
           <p className="text-muted-foreground">
             SubNet is a network of agents powered by Subconscious
           </p>
@@ -55,8 +68,11 @@ export default function HomePage() {
               <AgentCard
                 key={agent.id}
                 agent={agent}
-                onDelete={(agentId) => {
+                onDelete={async (agentId) => {
+                  // Remove the deleted agent from local state immediately for better UX
                   setAgents(agents.filter((a) => a.id !== agentId));
+                  // Refetch all agents to get updated fork counts
+                  await fetchAgents(true);
                 }}
               />
             ))}

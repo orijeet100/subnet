@@ -1,21 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { agentsTable } from '@/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, eq, and, like } from 'drizzle-orm';
 
 // GET /api/agents - Get first 50 agents
 export async function GET() {
   try {
     const agents = await db.select().from(agentsTable).orderBy(desc(agentsTable.id)).limit(50);
 
-    // Map database fields to match Agent interface
-    const mappedAgents = agents.map((agent) => ({
-      id: agent.id.toString(),
-      title: agent.name,
-      description: agent.description,
-      prompt: agent.prompt,
-      tools: (agent.tools as string[]) || [],
-    }));
+    // Map database fields to match Agent interface and add fork counts
+    const mappedAgents = await Promise.all(
+      agents.map(async (agent) => {
+        // Count forks for this agent
+        const forkCount = await db
+          .select({ count: agentsTable.id })
+          .from(agentsTable)
+          .where(
+            and(
+              eq(agentsTable.originalAgentId, agent.id),
+              like(agentsTable.name, `${agent.name} (Fork%`)
+            )
+          );
+
+        return {
+          id: agent.id.toString(),
+          title: agent.name,
+          description: agent.description,
+          prompt: agent.prompt,
+          tools: (agent.tools as string[]) || [],
+          ...(forkCount.length > 0 && { forkCount: forkCount.length }),
+        };
+      })
+    );
 
     return NextResponse.json(mappedAgents);
   } catch (error) {

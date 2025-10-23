@@ -57,9 +57,31 @@ export default function SharePage() {
     }
   };
 
-  const handleFork = () => {
-    // Store agent data in localStorage and redirect to create page
-    if (agent) {
+  const handleFork = async () => {
+    if (!agent) return;
+
+    try {
+      // Get fork information from API
+      const response = await fetch(`/api/agents/${agent.id}/forks`);
+      if (!response.ok) {
+        throw new Error('Failed to get fork information');
+      }
+      
+      const forkData = await response.json();
+      
+      // Store agent data in localStorage and redirect to create page
+      localStorage.setItem('forkAgent', JSON.stringify({
+        title: forkData.suggestedName,
+        description: forkData.originalAgent.description,
+        prompt: forkData.originalAgent.prompt,
+        tools: forkData.originalAgent.tools,
+        originalAgentId: agent.id
+      }));
+      
+      window.location.href = '/create';
+    } catch (error) {
+      console.error('Error getting fork information:', error);
+      // Fallback to simple fork naming
       localStorage.setItem('forkAgent', JSON.stringify({
         title: `${agent.title} (Fork)`,
         description: agent.description,
