@@ -7,5 +7,6 @@ export const agentsTable = pgTable('agents', {
   prompt: text().notNull(),
   tools: jsonb(),
   originalAgentId: integer(),
+  stars: integer().default(0).notNull(),
   createdAt: timestamp().defaultNow().notNull(),
 });

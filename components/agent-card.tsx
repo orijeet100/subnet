@@ -16,6 +16,7 @@ import { Trash2, Share2, GitFork, Users } from 'lucide-react';
 import { useState } from 'react';
 import { AVAILABLE_TOOLS } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { StarRating } from '@/components/star-rating';
 
 interface AgentCardProps {
   agent: Agent;
@@ -24,6 +25,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, onDelete }: AgentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [stars, setStars] = useState(agent.stars || 0);
   const { toast } = useToast();
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -111,6 +113,34 @@ export function AgentCard({ agent, onDelete }: AgentCardProps) {
     }
   };
 
+  const handleStarsChange = async (newStars: number) => {
+    try {
+      const response = await fetch('/api/agents', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: agent.id,
+          stars: newStars,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update stars');
+      }
+
+      setStars(newStars);
+    } catch (error) {
+      console.error('Error updating stars:', error);
+      toast({
+        title: "Failed to update stars",
+        description: "Could not update star rating",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card className="relative">
       <CardHeader>
@@ -170,12 +200,20 @@ export function AgentCard({ agent, onDelete }: AgentCardProps) {
               )}
             </div>
           </div>
-          {agent.forkCount && agent.forkCount > 0 && (
-            <div className="flex items-center gap-1 text-muted-foreground text-sm">
-              <Users className="h-3 w-3" />
-              <span>{agent.forkCount} fork{agent.forkCount !== 1 ? 's' : ''}</span>
+          <div className="flex items-center justify-between">
+            {agent.forkCount && agent.forkCount > 0 && (
+              <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                <Users className="h-3 w-3" />
+                <span>{agent.forkCount} fork{agent.forkCount !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+            <div className="ml-auto">
+              <StarRating 
+                stars={stars} 
+                onStarsChange={handleStarsChange}
+              />
             </div>
-          )}
+          </div>
         </div>
       </CardContent>
       <CardFooter>

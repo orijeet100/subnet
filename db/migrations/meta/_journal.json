@@ -15,6 +15,13 @@
       "when": 1761190139061,
       "tag": "0001_nasty_smasher",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761241364965,
+      "tag": "0002_good_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

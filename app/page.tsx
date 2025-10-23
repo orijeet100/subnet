@@ -4,19 +4,21 @@ import { useEffect, useState } from 'react';
 import type { Agent } from '@/lib/types';
 import { Header } from '@/components/header';
 import { AgentCard } from '@/components/agent-card';
+import { SortFilter, type SortOption } from '@/components/sort-filter';
 
 export default function HomePage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentSort, setCurrentSort] = useState<SortOption>('recent');
 
-  const fetchAgents = async (isRefresh = false) => {
+  const fetchAgents = async (isRefresh = false, sort: SortOption = currentSort) => {
     if (isRefresh) {
       setIsRefreshing(true);
     }
     
     try {
-      const response = await fetch('/api/agents');
+      const response = await fetch(`/api/agents?sort=${sort}`);
       if (!response.ok) {
         throw new Error('Failed to fetch agents');
       }
@@ -36,20 +38,30 @@ export default function HomePage() {
     fetchAgents();
   }, []);
 
+  const handleSortChange = async (sort: SortOption) => {
+    setCurrentSort(sort);
+    await fetchAgents(false, sort);
+  };
+
   return (
     <div className="bg-background min-h-screen">
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <div className="flex items-center gap-2">
-            <h1 className="text-foreground mb-2 text-4xl font-bold">Discover Agents</h1>
-            {isRefreshing && (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-            )}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-foreground mb-2 text-4xl font-bold">Discover Agents</h1>
+                {isRefreshing && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                )}
+              </div>
+              <p className="text-muted-foreground">
+                SubNet is a network of agents powered by Subconscious
+              </p>
+            </div>
+            <SortFilter currentSort={currentSort} onSortChange={handleSortChange} />
           </div>
-          <p className="text-muted-foreground">
-            SubNet is a network of agents powered by Subconscious
-          </p>
         </div>
 
         {isLoading ? (

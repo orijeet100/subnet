@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ADD COLUMN "stars" integer DEFAULT 0 NOT NULL;

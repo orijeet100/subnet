@@ -5,6 +5,7 @@ export interface Agent {
   prompt: string;
   tools: string[];
   forkCount?: number;
+  stars?: number;
 }
 
 export const AVAILABLE_TOOLS = [

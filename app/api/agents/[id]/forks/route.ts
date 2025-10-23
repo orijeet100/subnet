@@ -24,16 +24,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
 
-    // Count existing forks of this agent
+    // Count existing forks of this agent (regardless of name)
     const forkCount = await db
       .select({ count: agentsTable.id })
       .from(agentsTable)
-      .where(
-        and(
-          eq(agentsTable.originalAgentId, agentId),
-          like(agentsTable.name, `${originalAgent.name} (Fork%`)
-        )
-      );
+      .where(eq(agentsTable.originalAgentId, agentId));
 
     const nextForkNumber = forkCount.length + 1;
     const suggestedName = nextForkNumber === 1 
