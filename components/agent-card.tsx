@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Trash2, Share2, GitFork } from 'lucide-react';
 import { useState } from 'react';
 import { AVAILABLE_TOOLS } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface AgentCardProps {
   agent: Agent;
@@ -23,7 +24,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, onDelete }: AgentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -59,10 +60,17 @@ export function AgentCard({ agent, onDelete }: AgentCardProps) {
     const shareUrl = `${window.location.origin}/share/${agent.id}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Link Copied!",
+        description: "Agent share link copied to clipboard",
+      });
     } catch (error) {
       console.error('Failed to copy link:', error);
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy link to clipboard",
+        variant: "destructive",
+      });
     }
   };
 

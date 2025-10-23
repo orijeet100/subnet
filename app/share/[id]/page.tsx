@@ -10,13 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Copy, ExternalLink, GitFork } from 'lucide-react';
 import { AVAILABLE_TOOLS } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function SharePage() {
   const params = useParams();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchAgent() {
@@ -42,10 +43,17 @@ export default function SharePage() {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Link Copied!",
+        description: "Agent share link copied to clipboard",
+      });
     } catch (error) {
       console.error('Failed to copy link:', error);
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy link to clipboard",
+        variant: "destructive",
+      });
     }
   };
 
@@ -112,7 +120,7 @@ export default function SharePage() {
                 className="flex items-center gap-2"
               >
                 <Copy className="h-4 w-4" />
-                {copied ? 'Copied!' : 'Copy Link'}
+                Copy Link
               </Button>
               <Button
                 onClick={handleFork}

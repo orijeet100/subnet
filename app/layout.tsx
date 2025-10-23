@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { Footer } from '@/components/footer';
 import { Suspense } from 'react';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'SubNet',
@@ -27,6 +28,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </Suspense>
+        <Toaster />
         <Analytics />
       </body>
     </html>
