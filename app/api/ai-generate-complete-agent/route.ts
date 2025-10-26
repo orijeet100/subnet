@@ -138,7 +138,6 @@ You MUST respond with a valid JSON object containing exactly these fields: title
       }
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
-      console.error('Raw response:', response);
       
       // Fallback: create a basic agent structure
       agentData = {

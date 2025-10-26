@@ -39,8 +39,6 @@ export default function HomePage() {
       }
 
       const data = await response.json();
-      console.log('Received base64 image length:', data.base64Image.length);
-      console.log('Base64 starts with:', data.base64Image.substring(0, 50));
       return data.base64Image;
     } catch (error) {
       console.error('Error generating default profile photo:', error);
@@ -130,9 +128,6 @@ export default function HomePage() {
       
       // Generate default profile photo base64 from server
       const defaultProfilePhoto = await generateDefaultProfilePhotoFromServer();
-      
-      console.log('Creating agent with profile photo length:', defaultProfilePhoto.length);
-      console.log('Profile photo starts with:', defaultProfilePhoto.substring(0, 50));
 
       // Now create the agent directly in the database
       const createResponse = await fetch('/api/agents', {
