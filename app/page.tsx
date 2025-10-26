@@ -7,7 +7,7 @@ import { Header } from '@/components/header';
 import { AgentCard } from '@/components/agent-card';
 import { SortFilter, type SortOption } from '@/components/sort-filter';
 import { Button } from '@/components/ui/button';
-import { Wand2, Bot, Loader2 } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -175,7 +175,10 @@ export default function HomePage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <Header />
+      <Header 
+        onGenerateCompleteAgent={() => setShowCompleteAgentDialog(true)}
+        isGeneratingCompleteAgent={isGeneratingCompleteAgent}
+      />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between gap-4">
@@ -190,17 +193,7 @@ export default function HomePage() {
                 SubNet is a network of agents powered by Subconscious
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={() => setShowCompleteAgentDialog(true)}
-                disabled={isGeneratingCompleteAgent}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-              >
-                <Wand2 className="mr-2 h-4 w-4" />
-                Generate Complete Agent
-              </Button>
-              <SortFilter currentSort={currentSort} onSortChange={handleSortChange} />
-            </div>
+            <SortFilter currentSort={currentSort} onSortChange={handleSortChange} />
           </div>
         </div>
 
