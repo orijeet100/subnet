@@ -8,5 +8,6 @@ export const agentsTable = pgTable('agents', {
   tools: jsonb(),
   originalAgentId: integer(),
   stars: integer().default(0).notNull(),
+  profilePhoto: text().default('null_profile.jpg').notNull(),
   createdAt: timestamp().defaultNow().notNull(),
 });

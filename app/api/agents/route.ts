@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
           prompt: agent.prompt,
           tools: (agent.tools as string[]) || [],
           stars: agent.stars || 0,
+          profilePhoto: agent.profilePhoto || 'null_profile.jpg',
           ...(forkCount.length > 0 && { forkCount: forkCount.length }),
         };
       })
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, prompt, tools, originalAgentId } = body;
+    const { title, description, prompt, tools, originalAgentId, profilePhoto } = body;
 
     if (!title || !description || !prompt) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
         prompt,
         tools: tools || [],
         originalAgentId: originalAgentId ? parseInt(originalAgentId) : null,
+        profilePhoto: profilePhoto || 'null_profile.jpg',
       })
       .returning();
 

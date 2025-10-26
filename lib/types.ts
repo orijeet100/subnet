@@ -6,6 +6,7 @@ export interface Agent {
   tools: string[];
   forkCount?: number;
   stars?: number;
+  profilePhoto?: string;
 }
 
 export const AVAILABLE_TOOLS = [

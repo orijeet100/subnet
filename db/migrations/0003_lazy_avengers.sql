@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ADD COLUMN "profilePhoto" varchar(255) DEFAULT 'null_profile.jpg' NOT NULL;

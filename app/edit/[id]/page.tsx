@@ -16,50 +16,51 @@ import { Separator } from '@/components/ui/separator';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export default function CreatePage() {
+interface EditPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function EditPage({ params }: EditPageProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [prompt, setPrompt] = useState('');
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
-  const [originalAgentId, setOriginalAgentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Check for forked agent data or generated agent data in localStorage
-    const forkData = localStorage.getItem('forkAgent');
-    const generatedData = localStorage.getItem('generatedAgent');
-    
-    if (forkData) {
+    const loadAgent = async () => {
       try {
-        const agent = JSON.parse(forkData);
-        setTitle(agent.title || '');
-        setDescription(agent.description || '');
-        setPrompt(agent.prompt || '');
+        const { id } = await params;
+        const response = await fetch(`/api/agents/${id}`);
+        if (!response.ok) {
+          throw new Error('Failed to load agent');
+        }
+        const agent = await response.json();
+        
+        setTitle(agent.title);
+        setDescription(agent.description);
+        setPrompt(agent.prompt);
         setSelectedTools(agent.tools || []);
-        setOriginalAgentId(agent.originalAgentId || null);
-        // Clear the fork data after using it
-        localStorage.removeItem('forkAgent');
       } catch (error) {
-        console.error('Error parsing fork data:', error);
+        console.error('Error loading agent:', error);
+        toast({
+          title: "Failed to load agent",
+          description: "Could not load agent data. Please try again.",
+          variant: "destructive",
+        });
+        router.push('/');
+      } finally {
+        setIsLoading(false);
       }
-    } else if (generatedData) {
-      try {
-        const agent = JSON.parse(generatedData);
-        setTitle(agent.title || '');
-        setDescription(agent.description || '');
-        setPrompt(agent.prompt || '');
-        setSelectedTools(agent.tools || []);
-        // Clear the generated data after using it
-        localStorage.removeItem('generatedAgent');
-      } catch (error) {
-        console.error('Error parsing generated data:', error);
-      }
-    }
-  }, []);
+    };
+
+    loadAgent();
+  }, [params, router, toast]);
 
   const handleToolToggle = (tool: string) => {
     setSelectedTools((prev) =>
@@ -254,63 +255,68 @@ export default function CreatePage() {
         title: "Tools Required",
         description: "Please select at least one tool for your agent.",
         variant: "destructive",
-        className: "text-white",
       });
       return;
     }
 
-    setIsSubmitting(true);
-
-    const agent = {
-      title,
-      description,
-      prompt,
-      tools: selectedTools,
-      originalAgentId: originalAgentId,
-    };
-
+    setIsSaving(true);
     try {
-      const response = await fetch('/api/agents', {
-        method: 'POST',
+      const { id } = await params;
+      const response = await fetch(`/api/agents/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(agent),
+        body: JSON.stringify({
+          title,
+          description,
+          prompt,
+          tools: selectedTools,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create agent');
+        throw new Error('Failed to update agent');
       }
 
-      // Show success toast and redirect immediately
       toast({
-        title: "Agent Created!",
-        description: "Your agent has been successfully created.",
+        title: "Agent updated!",
+        description: "Your agent has been successfully updated.",
       });
-
-      // Redirect immediately for better UX
       router.push('/');
     } catch (error) {
-      console.error('Error creating agent:', error);
+      console.error('Error updating agent:', error);
       toast({
-        title: "Creation Failed",
-        description: "Failed to create agent. Please try again.",
+        title: "Failed to update agent",
+        description: "Could not update agent. Please try again.",
         variant: "destructive",
-        className: "text-white",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-background min-h-screen">
+        <Header />
+        <main className="container mx-auto max-w-3xl px-4 py-8">
+          <div className="py-16 text-center">
+            <p className="text-muted-foreground text-lg">Loading agent...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background min-h-screen">
       <Header />
       <main className="container mx-auto max-w-3xl px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-foreground mb-2 text-4xl font-bold">Create New Agent</h1>
+          <h1 className="text-foreground mb-2 text-4xl font-bold">Edit Agent</h1>
           <p className="text-muted-foreground">
-            Configure your Subconscious agent with instructions and search tools
+            Update your Subconscious agent with new instructions and search tools
           </p>
         </div>
 
@@ -418,23 +424,22 @@ export default function CreatePage() {
               <div className="flex gap-4 pt-4">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSaving}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 cursor-pointer"
                 >
-                  {isSubmitting ? (
+                  {isSaving ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Updating Agent...
                     </>
                   ) : (
-                    'Create Agent'
+                    'Update Agent'
                   )}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.push('/')}
-                  disabled={isSubmitting}
                   className="flex-1 cursor-pointer"
                 >
                   Cancel
